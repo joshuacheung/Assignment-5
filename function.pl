@@ -37,7 +37,6 @@ convertDepTime(time(Hr,Min),Time):-
      write( ' ' ), write( Head ), writepath( Tail ).
 
   listpath( Node, End, [flight(Node,Next,Time)|Outlist] ) :-
-    not(Node = End),
     flight(Node,Next,Time),
     listpath( Next, End, [flight(Node,Next,Time)], Outlist ).
 
@@ -45,14 +44,17 @@ convertDepTime(time(Hr,Min),Time):-
   listpath( Node, End,
             [flight(PrevNode,PrevNext,PrevTime)|Tried],
             [flight( Node, Next,Time)|List] ) :-
-     not(Node = End),
      flight( Node, Next,Time),
-     flightTime(PrevNode,Node,TravTime),
+     flightTime(PrevNode,PrevNext,TravTime),
+     convertDepTime(PrevTime,PrevDeps),
+     ArrTime is TravTime + PrevDeps,
+     convertDepTime(Time,DepTime),
+     ArrTime + 0.5 < DepTime,
      ComTried = append([flight(PrevNode,PrevNext,PrevTime)],Tried),
-     not( member( Next, ComTried )),
-     not(Node = PrevNext),
+     not( member(Next,ComTried )),
+     not(Next = PrevNext),
      listpath( Next, End, [flight( Node, Next,Time)|ComTried], List ).
 
   fly(Airport1,Airport2):-
-    listpath(Airport1,Airport2,List),
-    writepath(List),!.
+    listpath(Airport1,Airport2,List),!,
+    writepath(List).
