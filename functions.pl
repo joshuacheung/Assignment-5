@@ -29,26 +29,28 @@ convertTime(Time,Hours,Mins):-
   Mins is floor((Time-Hours)*60).
 
 convertDepTime(time(Hr,Min),Time):-
-  Time is Hr+(Min/60).
+  Time is Hr+Min/60.
 
 
 
   writepath( [] ) :-
      nl.
-  %writepath( [Head|Tail] ) :-
-  %   write( ' ' ), write( Head ), writepath( Tail ).
+ writepath( [flight(Depart, Arrive, Depart_time)|List] ) :-
+     airport(Depart, Depart_name, _, _),
+     airport(Arrive, Arrive_name, _, _),
+     convertDepTime(Depart_time,DepTime),
+     convertTime(DepTime,DepHour,DepMin),
+     write('depart '),write(Depart), write('  '), write(Depart_name),
+     write('  '), write(DepHour),write(':'),write(DepMin),nl,
+     flightTime(Depart,Arrive,ArriveTime),
+     ArrTime is ArriveTime + DepTime,
+     convertTime(ArrTime,ArrHour,ArrMin),
+     write('arrive '),write(Arrive), write('  '), write(Arrive_name),
+     write('  '), write(ArrHour),write(':'),write(ArrMin),nl,
+     writepath(List).
 
-  writepath( [flight(Depart, Arrive, Depart_time)|List] ) :-
-    airport(Depart, Depart_name, _, _),
-    airport(Arrive, Arrive_name, _, _),
-    write(Depart), write('  '), write(Depart_name),
-    write('  '), write(Depart_time), nl,
-    write(Arrive), write('  '), write(Arrive_name),
-    write('  '), write(Arrive_time),
-    writepath(List).
-
-
-  listpath( Node, End, [flight(Node,Next,Time)|Outlist] ) :-
+listpath( Node, End, [flight(Node,Next,Time)|Outlist] ) :-
+    not(Node=End),
     flight(Node,Next,Time),
     listpath( Next, End, [flight(Node,Next,Time)], Outlist ).
 
@@ -61,11 +63,12 @@ convertDepTime(time(Hr,Min),Time):-
      convertDepTime(PrevTime,PrevDeps),
      ArrTime is TravTime + PrevDeps,
      convertDepTime(Time,DepTime),
-     ArrTime + 0.5 < DepTime,
+     NewDep is ArrTime+0.5,
+     NewDep<24,
+     (NewDep < DepTime),
      ComTried = append([flight(PrevNode,PrevNext,PrevTime)],Tried),
      not( member(Next,ComTried )),
-     not(Next = PrevNext),
-     listpath( Next, End, [flight( Node, Next,Time)|ComTried], List ).
+     listpath( Next, End, [flight(Node,Next,Time)|ComTried], List ).
 
   fly(Airport1,Airport2):-
     listpath(Airport1,Airport2,List),!,
