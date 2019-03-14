@@ -51,6 +51,7 @@ convertDepTime(time(Hr,Min),Time):-
      ArrTime is TravTime + PrevDeps,
      convertDepTime(Time,DepTime),
      NewDep is ArrTime+0.5,
+     NewDep<24,
      (NewDep < DepTime),
      ComTried = append([flight(PrevNode,PrevNext,PrevTime)],Tried),
      not( member(Next,ComTried )),
